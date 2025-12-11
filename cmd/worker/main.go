@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/temporalio/temporal_gh_actions/github"
@@ -21,8 +21,7 @@ func main() {
 	// Create a Temporal client
 	temporalClient, err := client.Dial(client.Options{})
 	if err != nil {
-		fmt.Println("Failed to create Temporal client:", err)
-		os.Exit(1)
+		log.Fatalf("failed to create Temporal client: %v", err)
 	}
 
 	// Create a Temporal worker
@@ -38,7 +37,6 @@ func main() {
 
 	// Run the worker
 	if err = temporalWorker.Run(worker.InterruptCh()); err != nil {
-		fmt.Println("Worker failure:", err)
-		os.Exit(1)
+		log.Fatalf("worker failure: %v", err)
 	}
 }

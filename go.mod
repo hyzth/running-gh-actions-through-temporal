@@ -4,7 +4,7 @@ go 1.24.3
 
 require (
 	github.com/bradleyfalzon/ghinstallation/v2 v2.16.0
-	github.com/google/go-github/v68 v68.0.0
+	github.com/google/go-github/v80 v80.0.0
 	github.com/google/uuid v1.6.0
 	go.temporal.io/sdk v1.34.0
 )

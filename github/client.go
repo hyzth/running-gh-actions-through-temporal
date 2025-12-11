@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v80/github"
 )
 
 type GitHubApp struct {

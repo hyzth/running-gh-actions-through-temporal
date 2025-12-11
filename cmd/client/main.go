@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/temporalio/temporal_gh_actions/workflows"
@@ -13,14 +13,12 @@ func main() {
 	// Temporal client
 	temporalClient, err := client.Dial(client.Options{})
 	if err != nil {
-		fmt.Println("Failed to create Temporal client:", err)
-		os.Exit(1)
+		log.Fatalf("failed to create Temporal client: %v", err)
 	}
 
 	// Start a workflow
 	if err := runWaitAndEcho(context.Background(), temporalClient); err != nil {
-		fmt.Println("Failed to run workflow:", err)
-		os.Exit(1)
+		log.Fatalf("failed to run workflow: %v", err)
 	}
 }
 
@@ -45,15 +43,13 @@ func runWaitAndEcho(ctx context.Context, temporalClient client.Client) error {
 
 	future, err := temporalClient.ExecuteWorkflow(ctx, opts, wf, args)
 	if err != nil {
-		fmt.Println("Failed to execute workflow:", err)
-		os.Exit(1)
+		log.Fatalf("failed to execute workflow: %v", err)
 	}
 
 	var result workflows.GitHubActionResponse
 
 	if err = future.Get(ctx, &result); err != nil {
-		fmt.Println("Failed to get workflow result:", err)
-		os.Exit(1)
+		log.Fatalf("failed to get workflow result: %v", err)
 	}
 	return nil
 }

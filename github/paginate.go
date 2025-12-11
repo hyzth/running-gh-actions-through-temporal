@@ -3,7 +3,7 @@ package github
 import (
 	"iter"
 
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v80/github"
 )
 
 type (
