@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/temporalio/temporal_gh_actions/github"
 	"github.com/temporalio/temporal_gh_actions/workflows"
@@ -11,11 +12,15 @@ import (
 )
 
 func main() {
+	id, err := strconv.ParseInt(os.Getenv("GITHUB_APP_ID"), 10, 64)
+	if err != nil {
+		log.Fatalf("unable to parse GITHUB_APP_ID: %v", err)
+	}
 	// GitHub App configuration
 	app := github.GitHubApp{
-		Org:        "my-org",
-		ID:         1234567,
-		PrivateKey: "my-private-key",
+		Org:            os.Getenv("GITHUB_ORG"),
+		ID:             id,
+		PrivateKeyFile: os.Getenv("GITHUB_PRIVATE_KEY_FILE"),
 	}
 
 	// Create a Temporal client

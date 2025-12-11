@@ -12,9 +12,9 @@ import (
 )
 
 type GitHubApp struct {
-	Org        string
-	ID         int64
-	PrivateKey string
+	Org            string
+	ID             int64
+	PrivateKeyFile string
 }
 
 type Client struct {
@@ -22,10 +22,10 @@ type Client struct {
 }
 
 func NewClient(ctx context.Context, app GitHubApp, repo string) (*Client, error) {
-	appTransport, err := ghinstallation.NewAppsTransport(
+	appTransport, err := ghinstallation.NewAppsTransportKeyFromFile(
 		http.DefaultTransport,
 		app.ID,
-		[]byte(app.PrivateKey),
+		app.PrivateKeyFile,
 	)
 	if err != nil {
 		return nil, err
@@ -40,11 +40,11 @@ func NewClient(ctx context.Context, app GitHubApp, repo string) (*Client, error)
 		return nil, err
 	}
 
-	installationTransport, err := ghinstallation.New(
+	installationTransport, err := ghinstallation.NewKeyFromFile(
 		http.DefaultTransport,
 		app.ID,
 		installation.GetID(),
-		[]byte(app.PrivateKey),
+		app.PrivateKeyFile,
 	)
 	if err != nil {
 		return nil, err
