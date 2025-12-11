@@ -1,5 +1,8 @@
 # README
 
+This repo is forked from
+https://github.com/temporal-community/running-gh-actions-through-temporal.
+
 This code covers using Temporal to orchestrate GitHub Actions.
 
 ## Setup
