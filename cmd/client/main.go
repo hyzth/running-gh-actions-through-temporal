@@ -17,27 +17,42 @@ func main() {
 	}
 
 	// Start a workflow
-	if err := runWaitAndEcho(context.Background(), temporalClient); err != nil {
+	if err := run(context.Background(), temporalClient); err != nil {
 		log.Fatalf("failed to run workflow: %v", err)
 	}
 }
 
-func runWaitAndEcho(ctx context.Context, temporalClient client.Client) error {
+func run(ctx context.Context, temporalClient client.Client) error {
 	taskQueue := "my-task-queue"
 	opts := client.StartWorkflowOptions{TaskQueue: taskQueue}
 
-	wf := workflows.RunGitHubAction
-	args := workflows.GitHubActionRequest{
-		Org:          "my-org",
-		Repo:         "my-repo",
-		Ref:          "main",
-		WorkflowFile: "wait-and-echo.yaml",
-		Inputs: []struct {
-			Key   string
-			Value string
-		}{
-			{Key: "wait_time", Value: "100"},
-			{Key: "message", Value: "my custom message"},
+	wf := workflows.ExecuteConcurrentGitHubActions
+	args := []workflows.GitHubActionRequest{
+		{
+			Org:          os.Getenv("GITHUB_ORG"),
+			Repo:         "running-gh-actions-through-temporal",
+			Ref:          "main",
+			WorkflowFile: "wait-and-echo.yaml",
+			Inputs: []struct {
+				Key   string
+				Value string
+			}{
+				{Key: "wait_time", Value: "20"},
+				{Key: "message", Value: "my custom message"},
+			},
+		},
+		{
+			Org:          os.Getenv("GITHUB_ORG"),
+			Repo:         "test-gha-1",
+			Ref:          "main",
+			WorkflowFile: "test-1.yaml",
+			Inputs: []struct {
+				Key   string
+				Value string
+			}{
+				{Key: "wait_time", Value: "30"},
+				{Key: "message", Value: "my custom message"},
+			},
 		},
 	}
 
@@ -46,9 +61,9 @@ func runWaitAndEcho(ctx context.Context, temporalClient client.Client) error {
 		log.Fatalf("failed to execute workflow: %v", err)
 	}
 
-	var result workflows.GitHubActionResponse
+	var results []workflows.GitHubActionResponse
 
-	if err = future.Get(ctx, &result); err != nil {
+	if err = future.Get(ctx, &results); err != nil {
 		log.Fatalf("failed to get workflow result: %v", err)
 	}
 	return nil

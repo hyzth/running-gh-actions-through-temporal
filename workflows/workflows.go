@@ -30,7 +30,62 @@ type GitHubActionResponse struct {
 	URL        string
 }
 
-func RunGitHubAction(
+func ExecuteSequentialGitHubActions(
+	ctx workflow.Context,
+	requests []GitHubActionRequest,
+) ([]*GitHubActionResponse, error) {
+
+	var results []*GitHubActionResponse
+
+	for _, req := range requests {
+		resp, err := runGitHubAction(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, resp)
+	}
+
+	return results, nil
+}
+
+func ExecuteConcurrentGitHubActions(
+	ctx workflow.Context,
+	requests []GitHubActionRequest,
+) ([]*GitHubActionResponse, error) {
+
+	futures := make([]workflow.Future, len(requests))
+
+	for i, req := range requests {
+		// Closure over variables i and req
+		i, req := i, req
+
+		fut, setter := workflow.NewFuture(ctx)
+		futures[i] = fut
+		workflow.Go(ctx, func(ctx workflow.Context) {
+			resp, err := runGitHubAction(ctx, req)
+			// Resolve the future
+			if err != nil {
+				setter.Set(nil, err)
+				return
+			}
+			setter.Set(resp, nil)
+		})
+	}
+
+	// Collect the results
+	results := make([]*GitHubActionResponse, len(requests))
+	for i, fut := range futures {
+		var resp *GitHubActionResponse
+		if err := fut.Get(ctx, &resp); err != nil {
+			return nil, err
+		}
+		results[i] = resp
+	}
+
+	return results, nil
+}
+
+func runGitHubAction(
 	ctx workflow.Context,
 	request GitHubActionRequest,
 ) (*GitHubActionResponse, error) {
@@ -82,13 +137,14 @@ func triggerGitHubAction(
 ) error {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		// Timeout of the entire activity execution, including retries.
-		ScheduleToCloseTimeout: 5 * time.Minute,
+		ScheduleToCloseTimeout: 45 * time.Minute,
 		// Timeout of a single activity attempt.
-		StartToCloseTimeout: 5 * time.Second,
+		StartToCloseTimeout: 10 * time.Minute,
 		// Define the retry behavior of the activity.
 		RetryPolicy: &temporal.RetryPolicy{
 			// Maximum time between retries.
-			MaximumInterval: 5 * time.Second,
+			MaximumInterval: 10 * time.Second,
+			MaximumAttempts: 3,
 			// Errors that will prevent the activity from being retried.
 			NonRetryableErrorTypes: []string{
 				ReservedInputKeyError{}.Name(),
@@ -113,13 +169,14 @@ func getActionID(
 ) (int64, error) {
 	ctx = workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		// Timeout of the entire activity execution, including retries.
-		ScheduleToCloseTimeout: 10 * time.Minute,
+		ScheduleToCloseTimeout: 3 * time.Minute,
 		// Timeout of a single activity attempt.
-		StartToCloseTimeout: 5 * time.Second,
+		StartToCloseTimeout: 30 * time.Second,
 		// Define the retry behavior of the activity.
 		RetryPolicy: &temporal.RetryPolicy{
 			// Maximum time between retries.
-			MaximumInterval: 30 * time.Second,
+			MaximumInterval: 10 * time.Second,
+			MaximumAttempts: 3,
 		},
 	})
 

@@ -34,7 +34,8 @@ func main() {
 	temporalWorker := worker.New(temporalClient, taskQueue, worker.Options{})
 
 	// Register workflows
-	temporalWorker.RegisterWorkflow(workflows.RunGitHubAction)
+	temporalWorker.RegisterWorkflow(workflows.ExecuteSequentialGitHubActions)
+	temporalWorker.RegisterWorkflow(workflows.ExecuteConcurrentGitHubActions)
 
 	// Register activities
 	activities := workflows.Activities{App: app}
