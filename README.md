@@ -1,39 +1,27 @@
-# README
+# running-gh-actions-through-temporal
 
-This repo is forked from
-https://github.com/temporal-community/running-gh-actions-through-temporal.
+Orchestrate GitHub Actions using Temporal.
 
-This code covers using Temporal to orchestrate GitHub Actions.
+For more details, see
+https://temporal.io/blog/running-github-actions-temporal-guide.
 
-## Setup
+## Usage
 
-Before you can run GitHub Actions, you need to provide information about your own GitHub app, organization, and repository.
+### Prerequisites
 
-```go
-// cmd/worker/main.go
-app := github.GitHubApp{
-  Org:        "my-org",
-  ID:         123456,
-  PrivateKey: "my-private-key",
-}
+- Authentication is handled via GitHub Apps. You will need a GitHub App and
+  install it in every repo where you want to run GitHub Actions using Temporal.
 
-// cmd/client/main.go
-args := workflows.GitHubActionRequest{
-  Org:          "my-org",
-  Repo:         "my-repo",
-  Ref:          "main",
-  WorkflowFile: "wait-and-echo.yaml",
-  Inputs: []struct {
-    Key   string
-    Value string
-  }{
-    {Key: "wait_time", Value: "100"},
-    {Key: "message", Value: "my custom message"},
-  },
-}
-```
+- Provide your GitHub organization name, GitHub App ID, and GitHub App private
+  key file's path via `GITHUB_ORG`, `GITHUB_APP_ID`, and
+  `GITHUB_PRIVATE_KEY_PATH` env vars respectively.
 
-After you have set everything up, you can run the Temporal server, the worker, and the client.
+- Set up the worker and client if needed via `cmd/worker/main.go` and
+  `cmd/client/main.go` respectively.
+
+### Running it
+
+After you have set everything up, run the Temporal server, worker, and client
 
 ```bash
 # Start a Temporal server in the background
@@ -46,6 +34,6 @@ go run ./cmd/worker/main.go &
 go run ./cmd/client/main.go
 ```
 
-Go to `http://localhost:7233` to see the Temporal Web UI and monitor the workflow.
+View the workflows in the Temporal UI at `http://localhost:7233`.
 
 Go to your repository's Actions tab to see the GitHub Action run.
